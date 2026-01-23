@@ -1,0 +1,16 @@
+name: agents
+dependencies:
+  - python=3.13
+  - pip
+  - pip:
+    - haystack
+    - google-genai
+    - langchain
+    - langgraph
+    - python-dotenv
+    - langchain-google-genai
+    - langchain-ollama
+    - IPython
+    - langchain_community
+    - beautifulsoup4
+    
