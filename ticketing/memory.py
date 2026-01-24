@@ -50,3 +50,9 @@ class InMemoryTicketing:
         )
         self.tickets.append(t)
         return t
+    
+    def list_tickets(self) -> List[Ticket]:
+        return self.tickets
+    
+    def empty_tickets(self) -> None:
+        self.tickets.clear()

@@ -21,12 +21,12 @@ def clean_extracted_text(text: str) -> str:
         if not ln:
             continue
 
-        # Drop lines that are basically numeric clutter / UI labels
+        # Drop lines containing only symbols/digits (e.g., page numbers, figure numbers)
         only_symbols_digits = re.sub(r"[0-9\s,.\-:/]", "", ln) == ""
         if only_symbols_digits and len(ln) <= 40:
             continue
 
-        # Drop very short lines that are mostly non-letters (common in diagrams)
+        # Drop very short lines that are mostly non-letters
         letters = re.findall(r"[A-Za-zÄÖÜäöüß]", ln)
         if len(letters) < 10 and len(ln) < 25:
             continue

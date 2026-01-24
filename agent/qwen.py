@@ -1,42 +1,22 @@
-from langchain.tools import tool
-from langchain.chat_models import init_chat_model
+from langchain_ollama import ChatOllama
+from config import Config
+from rag.retrieve import load_index
+from ticketing.memory import InMemoryTicketing
+from agent.tools import make_retrieval_tool, make_ticket_tool
 
+cfg = Config()
 
-qwen = init_chat_model("ollama:qwen2:7b", temperature=0)
+qwen = ChatOllama(model="qwen2:7b", temperature=0)
 
-# Define tools
-@tool
-def multiply(a: int, b: int) -> int:
-    """Multiply `a` and `b`.
+vs = load_index(cfg.index_dir, cfg.embed_model)
+ticketing = InMemoryTicketing()
 
-    Args:
-        a: First int
-        b: Second int
-    """
-    return a * b
+retrieve_tool = make_retrieval_tool(vs, k=cfg.top_k)
+ticket_tool = make_ticket_tool(ticketing)
 
-
-@tool
-def add(a: int, b: int) -> int:
-    """Adds `a` and `b`.
-
-    Args:
-        a: First int
-        b: Second int
-    """
-    return a + b
-
-
-@tool
-def divide(a: int, b: int) -> float:
-    """Divide `a` and `b`.
-
-    Args:
-        a: First int
-        b: Second int
-    """
-    return a / b
-
-tools = [multiply, add, divide]
-tools_by_name = {tool.name: tool for tool in tools}
+tools = [retrieve_tool, ticket_tool]
+qwen_tools_by_name = {tool.name: tool for tool in tools}
 qwen_with_tools = qwen.bind_tools(tools)
+
+q = "How can I save energy?"
+print(retrieve_tool.invoke({"query": q}))

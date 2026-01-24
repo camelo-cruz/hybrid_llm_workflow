@@ -6,3 +6,5 @@ faiss-cpu
 pymupdf
 pypdf
 sentence-transformers
+langchain-google-genai
+langchain-ollama

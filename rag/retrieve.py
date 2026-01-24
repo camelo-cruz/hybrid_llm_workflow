@@ -1,6 +1,3 @@
-# rag/retrieve.py
-from __future__ import annotations
-
 from pathlib import Path
 from typing import List, Tuple
 
@@ -17,7 +14,5 @@ def load_index(index_dir: Path, embed_model: str) -> FAISS:
         allow_dangerous_deserialization=True,
     )
 
-
 def search_with_scores(vectorstore: FAISS, query: str, k: int) -> List[Tuple[Document, float]]:
-    # score is distance (lower is better) in default FAISS config
     return vectorstore.similarity_search_with_score(query, k=k)

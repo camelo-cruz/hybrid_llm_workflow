@@ -16,7 +16,3 @@ agent_builder.add_conditional_edges(
 agent_builder.add_edge('tool_node', 'llm_call')
 
 agent = agent_builder.compile()
-
-messages = [HumanMessage(content="Add 3 and 4.")]
-messages = agent.invoke({"messages": messages})
-print(messages)

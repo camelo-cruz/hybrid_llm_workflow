@@ -4,6 +4,7 @@ from config import Config
 from rag.retrieve import load_index, search_with_scores
 from rag.decision import decide
 from ticketing.memory import InMemoryTicketing
+from agent.agent import agent
 
 
 cfg = Config()
@@ -29,6 +30,10 @@ if decision.action == "ticket":
     print("type:", t.type)
     print("top_sources:", t.top_sources)
 else:
+
+    # Call the agent to answer the query
+    # TODO: pass hits to the agent to use as context
+
     print("\nTOP HITS:")
     for i, (doc, dist) in enumerate(hits, 1):
         print(f"\n--- HIT {i} ---")
@@ -36,3 +41,7 @@ else:
         print("file:", doc.metadata.get("filename"))
         print("page:", doc.metadata.get("page"))
         print("preview:", doc.page_content[:300])
+
+    print("We need to call the agent to answer the query here...")
+
+
