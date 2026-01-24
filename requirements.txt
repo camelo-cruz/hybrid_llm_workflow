@@ -1,0 +1,8 @@
+langchain
+langchain-community
+langchain-huggingface
+langchain-experimental
+faiss-cpu
+pymupdf
+pypdf
+sentence-transformers
