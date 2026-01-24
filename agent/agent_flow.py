@@ -3,8 +3,8 @@ import operator
 from langchain.messages import AnyMessage, SystemMessage
 from typing_extensions import TypedDict, Annotated, NotRequired
 from langchain.messages import ToolMessage
-from qwen import qwen_with_tools, qwen_tools_by_name
-from gemini import gemini_with_tools, gemini_tools_by_name
+from agent.qwen import qwen_with_tools, qwen_tools_by_name
+from agent.gemini import gemini_with_tools, gemini_tools_by_name
 from langgraph.graph import END
 
 

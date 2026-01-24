@@ -30,7 +30,3 @@ tools = [retrieve_tool, ticket_tool]
 gemini_tools_by_name = {t.name: t for t in tools}
 
 gemini_with_tools = gemini.bind_tools(tools)
-
-q = "How can I save energy?"
-print(retrieve_tool.invoke({"query": q}))
-

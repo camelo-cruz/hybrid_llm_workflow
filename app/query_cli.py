@@ -5,10 +5,18 @@ from rag.retrieve import load_index, search_with_scores
 from rag.decision import decide
 from ticketing.memory import InMemoryTicketing
 from agent.agent import agent
+from wasabi import msg
 
 
 cfg = Config()
-query = " ".join(sys.argv[1:]).strip() or "I like chocolate"
+query = " ".join(sys.argv[1:]).strip()
+if not query:
+    msg.fail("Please provide a query as a command-line argument.", exits=1)
+else:
+    msg.good(f"Running query: {query}")
+
+if cfg.index_dir is None:
+    msg.fail("Index directory is not configured. Please run the ingestion first.", exits=1)
 
 vs = load_index(cfg.index_dir, cfg.embed_model)
 hits = search_with_scores(vs, query=query, k=cfg.top_k)
