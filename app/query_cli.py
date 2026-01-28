@@ -6,7 +6,7 @@ from rag.decision import decide
 from ticketing.memory import InMemoryTicketing
 from agent.agent import agent
 from wasabi import msg
-
+from langchain.messages import HumanMessage
 
 cfg = Config()
 query = " ".join(sys.argv[1:]).strip()
@@ -26,30 +26,40 @@ decision = decide(hits, max_distance=cfg.max_distance)
 print("\nQUERY:", query)
 print("DECISION:", decision.action, "| reason:", decision.reason, "| best_distance:", decision.best_distance)
 
-if decision.action == "ticket":
-    ticketing = InMemoryTicketing()
-    t = ticketing.create_ticket(
-        type="DOC_GAP_OR_LOW_RELEVANCE",
-        query=query,
-        best_distance=decision.best_distance,
-        hits=hits,
-    )
-    print("\nTICKET CREATED:", t.id)
-    print("type:", t.type)
-    print("top_sources:", t.top_sources)
-else:
 
-    # Call the agent to answer the query
-    # TODO: pass hits to the agent to use as context
+ticketing = InMemoryTicketing()
+t = ticketing.create_ticket(
+    type="DOC_GAP_OR_LOW_RELEVANCE",
+    query=query,
+    best_distance=decision.best_distance,
+    hits=hits,
+)
+print("\nTICKET CREATED:", t.id)
+print("type:", t.type)
+print("top_sources:", t.top_sources)
 
-    print("\nTOP HITS:")
-    for i, (doc, dist) in enumerate(hits, 1):
-        print(f"\n--- HIT {i} ---")
-        print("dist:", dist)
-        print("file:", doc.metadata.get("filename"))
-        print("page:", doc.metadata.get("page"))
-        print("preview:", doc.page_content[:300])
+context = "\n".join([
+        f"[Source: {doc.metadata.get('filename')}] {doc.page_content[:500]}"
+        for doc, dist in hits
+    ])
+    
+prompt = f"""Based on the following context from medical records, answer the user's question.
+If you need more specific data (like counting ALL patients or getting complete lists), use the search_csv tool.
 
-    print("We need to call the agent to answer the query here...")
+CONTEXT:
+{context}
+
+USER QUESTION: {query}
+
+Answer:"""
+    
+print("\nCalling agent...")
+result = agent.invoke({
+    'messages': [HumanMessage(content=prompt)],
+    'llm_calls': 0
+})
+    
+print("\n=== AGENT RESPONSE ===")
+print(result['messages'][-1].content)
 
 

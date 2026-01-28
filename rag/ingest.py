@@ -5,6 +5,8 @@ import re
 from pathlib import Path
 from typing import List
 
+import pandas as pd
+
 from langchain_community.document_loaders import PyMuPDFLoader
 from langchain_community.vectorstores import FAISS
 from langchain_huggingface import HuggingFaceEmbeddings
@@ -39,19 +41,66 @@ def clean_extracted_text(text: str) -> str:
     return text.strip()
 
 
-def load_pdfs(pdf_dir: Path) -> List[Document]:
-    pdf_paths = sorted(pdf_dir.glob("*.pdf"))
-    if not pdf_paths:
-        raise FileNotFoundError(f"No PDFs found in {pdf_dir}")
+def load_files(source_dir: Path, file_type: str = 'pdf', rows_per_chunk: int = 50) -> List[Document]:
+    """Load PDF or CSV files from a directory into Documents.
+    
+    Args:
+        source_dir: Directory containing the files to load.
+        file_type: Type of files to load ('pdf' or 'csv').
+        rows_per_chunk: For CSVs, number of rows to combine into one document.
+    
+    Returns:
+        List of Document objects with content and metadata.
+    """
+    paths = sorted(source_dir.glob(f"*.{file_type}"))
+
+    if not paths:
+        raise FileNotFoundError(f"No {file_type.upper()} files found in {source_dir}")
 
     docs: List[Document] = []
-    for path in pdf_paths:
-        pages = PyMuPDFLoader(str(path)).load()
-        for d in pages:
-            d.page_content = clean_extracted_text(d.page_content)
-            d.metadata["source"] = str(path)
-            d.metadata["filename"] = path.name
-        docs.extend(pages)
+    for path in paths:
+        if file_type == 'pdf':
+            pages = PyMuPDFLoader(str(path)).load()
+            # Clean extracted text only for PDFs (removes noise like page numbers)
+            for d in pages:
+                d.page_content = clean_extracted_text(d.page_content)
+                d.metadata["source"] = str(path)
+                d.metadata["filename"] = path.name
+            docs.extend(pages)
+            
+        elif file_type == 'csv':
+            # Use pandas to batch rows together for efficiency
+            df = pd.read_csv(path)
+            columns = df.columns.tolist()
+            
+            # Group rows into chunks to reduce document count
+            for start_idx in range(0, len(df), rows_per_chunk):
+                chunk_df = df.iloc[start_idx:start_idx + rows_per_chunk]
+                
+                # Format each row as "col1: val1 | col2: val2 | ..."
+                rows_text = []
+                for _, row in chunk_df.iterrows():
+                    row_str = " | ".join(f"{col}: {row[col]}" for col in columns)
+                    rows_text.append(row_str)
+                
+                content = f"File: {path.name}\n" + "\n".join(rows_text)
+                
+                doc = Document(
+                    page_content=content,
+                    metadata={
+                        "source": str(path),
+                        "filename": path.name,
+                        "row_start": start_idx,
+                        "row_end": min(start_idx + rows_per_chunk, len(df)),
+                    }
+                )
+                docs.append(doc)
+            
+            pages = len(range(0, len(df), rows_per_chunk))
+        else:
+            raise ValueError(f"Unsupported file type: {file_type}")
+        
+        print(f"Loaded {len(pages) if file_type == 'pdf' else pages} documents from {path.name}")
 
     return docs
 
@@ -81,15 +130,27 @@ def build_and_save_index(
     vectorstore.save_local(str(index_dir))
 
 
-def ingest_pdf_folder(
-    pdf_dir: Path,
+def ingest_folder(
+    source_dir: Path,
+    file_type: str,
     index_dir: Path,
     embed_model: str,
     min_chars_per_page: int,
     chunk_size: int,
     chunk_overlap: int,
 ) -> None:
-    docs = load_pdfs(pdf_dir)
+    print("Loading files...")
+    docs = load_files(source_dir, file_type=file_type)
+    print(f"Total documents loaded: {len(docs)}")
+    
+    print("Filtering pages...")
     kept = filter_pages(docs, min_chars_per_page=min_chars_per_page)
+    print(f"Documents after filtering: {len(kept)}")
+    
+    print("Chunking documents...")
     chunks = chunk_docs(kept, chunk_size=chunk_size, chunk_overlap=chunk_overlap)
+    print(f"Total chunks: {len(chunks)}")
+    
+    print("Building embeddings and index (this may take a few minutes)...")
     build_and_save_index(chunks, embed_model=embed_model, index_dir=index_dir)
+    print("Done!")

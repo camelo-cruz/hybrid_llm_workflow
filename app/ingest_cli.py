@@ -1,11 +1,12 @@
 from config import Config
-from rag.ingest import ingest_pdf_folder
+from rag.ingest import ingest_folder
 
 
 cfg = Config()
 
-ingest_pdf_folder(
-    pdf_dir=cfg.pdf_dir,
+ingest_folder(
+    source_dir=cfg.pdf_dir,
+    file_type=cfg.file_type,
     index_dir=cfg.index_dir,
     embed_model=cfg.embed_model,
     min_chars_per_page=cfg.min_chars_per_page,

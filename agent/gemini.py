@@ -4,7 +4,7 @@ from langchain.chat_models import init_chat_model
 from ticketing.memory import InMemoryTicketing
 from rag.retrieve import load_index
 from config import Config
-from agent.tools import make_retrieval_tool, make_ticket_tool
+from agent.tools import make_retrieval_tool, make_ticket_tool, make_csv_search_tool
 
 
 cfg = Config()
@@ -25,8 +25,9 @@ ticketing = InMemoryTicketing()
 
 retrieve_tool = make_retrieval_tool(vs, k=cfg.top_k)
 ticket_tool = make_ticket_tool(ticketing)
+search_tool = make_csv_search_tool(cfg.csv_dir)
 
-tools = [retrieve_tool, ticket_tool]
+tools = [retrieve_tool, ticket_tool, search_tool]
 gemini_tools_by_name = {t.name: t for t in tools}
 
 gemini_with_tools = gemini.bind_tools(tools)

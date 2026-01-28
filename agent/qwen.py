@@ -2,7 +2,7 @@ from langchain_ollama import ChatOllama
 from config import Config
 from rag.retrieve import load_index
 from ticketing.memory import InMemoryTicketing
-from agent.tools import make_retrieval_tool, make_ticket_tool
+from agent.tools import make_retrieval_tool, make_ticket_tool, make_csv_search_tool
 
 cfg = Config()
 
@@ -13,7 +13,8 @@ ticketing = InMemoryTicketing()
 
 retrieve_tool = make_retrieval_tool(vs, k=cfg.top_k)
 ticket_tool = make_ticket_tool(ticketing)
+search_tool = make_csv_search_tool(cfg.csv_dir)
 
-tools = [retrieve_tool, ticket_tool]
+tools = [retrieve_tool, ticket_tool, search_tool]
 qwen_tools_by_name = {tool.name: tool for tool in tools}
 qwen_with_tools = qwen.bind_tools(tools)
