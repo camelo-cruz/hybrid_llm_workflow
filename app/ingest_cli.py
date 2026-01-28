@@ -1,10 +1,10 @@
 from config import Config
-from rag.ingest import ingest_folder
+from rag.ingest import ingest_pdf_folder
 
 
 cfg = Config()
 
-ingest_folder(
+ingest_pdf_folder(
     pdf_dir=cfg.pdf_dir,
     index_dir=cfg.index_dir,
     embed_model=cfg.embed_model,

@@ -81,7 +81,7 @@ def build_and_save_index(
     vectorstore.save_local(str(index_dir))
 
 
-def ingest_folder(
+def ingest_pdf_folder(
     pdf_dir: Path,
     index_dir: Path,
     embed_model: str,
