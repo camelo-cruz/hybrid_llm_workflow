@@ -6,9 +6,10 @@ from pathlib import Path
 
 @dataclass(frozen=True)
 class Config:
-    pdf_dir: Path = Path("/Users/alejandra/Documents/GitHub/hybrid_llm_workflow/documents/medical_documents")
+    source_dir: Path = Path("/Users/alejandra/Documents/GitHub/hybrid_llm_workflow/documents/medical_documents")
     index_dir: Path = Path("data/indexes/medical_documents")
     file_type: str = "csv"
+    csv_dir: Path = Path("/Users/alejandra/Documents/GitHub/hybrid_llm_workflow/documents/medical_documents/csv")
 
     min_chars_per_page: int = 200
     chunk_size: int = 2000

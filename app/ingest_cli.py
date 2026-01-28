@@ -5,7 +5,7 @@ from rag.ingest import ingest_folder
 cfg = Config()
 
 ingest_folder(
-    source_dir=cfg.pdf_dir,
+    source_dir=cfg.source_dir,
     file_type=cfg.file_type,
     index_dir=cfg.index_dir,
     embed_model=cfg.embed_model,
@@ -14,4 +14,4 @@ ingest_folder(
     chunk_overlap=cfg.chunk_overlap,
 )
 
-print(f"Indexed PDFs from {cfg.pdf_dir} into {cfg.index_dir}")
+print(f"Indexed files from {cfg.source_dir} into {cfg.index_dir}")
