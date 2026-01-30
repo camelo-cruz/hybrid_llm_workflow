@@ -27,39 +27,54 @@ print("\nQUERY:", query)
 print("DECISION:", decision.action, "| reason:", decision.reason, "| best_distance:", decision.best_distance)
 
 
-ticketing = InMemoryTicketing()
-t = ticketing.create_ticket(
-    type="DOC_GAP_OR_LOW_RELEVANCE",
-    query=query,
-    best_distance=decision.best_distance,
-    hits=hits,
-)
-print("\nTICKET CREATED:", t.id)
-print("type:", t.type)
-print("top_sources:", t.top_sources)
+if decision.action == "ticket":
+    ticketing = InMemoryTicketing()
+    t = ticketing.create_ticket(
+        type="DOC_GAP_OR_LOW_RELEVANCE",
+        query=query,
+        best_distance=decision.best_distance,
+        hits=hits,
+    )
+    print("\nTICKET CREATED:", t.id)
+    print("type:", t.type)
+    print("top_sources:", t.top_sources)
+    # opcional: salida “user-facing”
+    print("\nNo reliable sources found. Ticket created.")
+    sys.exit(0)
 
-context = "\n".join([
-        f"[Source: {doc.metadata.get('filename')}] {doc.page_content[:500]}"
-        for doc, dist in hits
-    ])
-    
-prompt = f"""Based on the following context from medical records, answer the user's question.
-If you need more specific data (like counting ALL patients or getting complete lists), use the search_csv tool.
+elif decision.action == "answer":
+    context_parts = []
+    for i, (doc, dist) in enumerate(hits, start=1):
+        fn = doc.metadata.get("filename", "unknown")
+        page = doc.metadata.get("page", doc.metadata.get("page_number", ""))
+        context_parts.append(
+            f"[S{i} | file={fn} | page={page} | dist={dist:.3f}]\n{doc.page_content}"
+        )
+    context = "\n\n".join(context_parts)
 
-CONTEXT:
-{context}
+    prompt = f"""You must answer using ONLY the context sources.
+    Cite sources after every sentence using the IDs like [S1], [S2] (multiple allowed).
+    If the context does not contain the answer, say "I don't know based on the provided documents" and suggest creating a ticket.
 
-USER QUESTION: {query}
+    CONTEXT:
+    {context}
 
-Answer:"""
-    
-print("\nCalling agent...")
-result = agent.invoke({
-    'messages': [HumanMessage(content=prompt)],
-    'llm_calls': 0
-})
-    
-print("\n=== AGENT RESPONSE ===")
-print(result['messages'][-1].content)
+    QUESTION: {query}
 
+    Return format:
+    - Answer: ...
+    - Sources: list the used sources (file names and page)
+    """
 
+    print("\nCalling agent...")
+    result = agent.invoke({
+        "messages": [HumanMessage(content=prompt)],
+        "llm_calls": 0
+    })
+
+    print("\n=== AGENT RESPONSE ===")
+    print(result["messages"][-1].content)
+    sys.exit(0)
+
+else:
+    msg.fail(f"Unknown decision action: {decision.action}", exits=1)
