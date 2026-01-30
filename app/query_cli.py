@@ -53,7 +53,7 @@ elif decision.action == "answer":
     context = "\n\n".join(context_parts)
 
     prompt = f"""You must answer using ONLY the context sources.
-    Cite sources after every sentence using the IDs like [S1], [S2] (multiple allowed).
+    Cite sources after every sentence using id and file names like S1: file_name, S2: file_name (multiple allowed).
     If the context does not contain the answer, say "I don't know based on the provided documents" and suggest creating a ticket.
 
     CONTEXT:
